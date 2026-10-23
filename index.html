@@ -1123,5 +1123,21 @@
   if (dirty) scheduleSave();
 })();
 </script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .catch((error) => {
+          console.error(
+            "Shinobu service worker registration failed:",
+            error
+          );
+        });
+    });
+  }
+</script>
+
 </body>
+
 </html>
