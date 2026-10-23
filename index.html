@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121214">
+  <meta name="color-scheme" content="dark">
+  <title>Shinobu — Light Novel Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#121214; --panel:#1a1a1e; --raised:#27272c;
+      --line:#3f3f46; --text:#f1f1f5; --muted:#a1a1aa;
+      --accent:#818cf8; --accent-bg:#312e81; --danger:#fb7185;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; min-height:100%; background:var(--bg); color:var(--text); }
+    body { font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    button,input,textarea,select { font:inherit; }
+    button { color:inherit; cursor:pointer; touch-action:manipulation; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible {
+      outline:2px solid var(--accent); outline-offset:2px;
+    }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .app { height:100dvh; min-height:0; display:flex; overflow:hidden; }
+    .sidebar {
+      width:280px; flex:0 0 280px; display:flex; flex-direction:column;
+      background:var(--bg); border-right:1px solid var(--line);
+      padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);
+      min-height:0; z-index:30;
+    }
+    .brand { display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--line); }
+    .logo { width:38px; height:38px; display:grid; place-items:center; background:#4f46e5; border-radius:10px; font-weight:800; font-size:20px; }
+    .brand-copy { flex:1; min-width:0; }
+    .brand input { width:100%; min-width:0; background:transparent; border:0; border-bottom:1px solid transparent; color:white; font-weight:700; padding:3px 0; }
+    .brand input:focus { border-color:var(--accent); outline:none; }
+    .sub { color:var(--muted); font-size:12px; }
+    .tabs { display:flex; border-bottom:1px solid var(--line); background:var(--panel); }
+    .tab { flex:1; min-height:46px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); font-size:12px; }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); background:var(--bg); }
+    .side-content { flex:1; overflow:auto; overscroll-behavior:contain; padding:16px; }
+    .section-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px; }
+    .eyebrow { font-size:11px; font-weight:750; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+    .btn { min-height:40px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--raised); }
+    .btn:hover { filter:brightness(1.13); }
+    .btn.primary { background:#4f46e5; border-color:#6366f1; color:white; }
+    .btn.ghost { background:transparent; }
+    .btn.danger { color:var(--danger); }
+    .btn.small { min-height:34px; padding:6px 9px; font-size:12px; }
+    .chapter-list,.wiki-list { display:grid; gap:5px; }
+    .chapter-row { display:flex; align-items:center; gap:4px; }
+    .chapter-select { flex:1; min-width:0; text-align:left; border:1px solid transparent; background:transparent; border-radius:8px; padding:11px 9px; color:var(--muted); overflow-wrap:anywhere; }
+    .chapter-select.active { background:#312e8144; border-color:#6366f155; color:#c7d2fe; }
+    .delete-btn { width:38px; height:38px; border:0; border-radius:8px; background:transparent; color:var(--muted); }
+    .delete-btn:hover { color:var(--danger); background:var(--raised); }
+    .wiki-card { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:8px; background:var(--panel); }
+    .wiki-card input { width:100%; background:transparent; color:white; border:0; border-bottom:1px solid transparent; padding:5px 0; }
+    .wiki-card input:focus { outline:none; border-color:var(--accent); }
+    .wiki-card .wiki-role { color:var(--muted); font-size:12px; }
+    .side-footer { padding:12px 16px; border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:11px; }
+    .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; margin-right:6px; }
+    .main { min-width:0; min-height:0; flex:1; display:flex; flex-direction:column; background:var(--panel); }
+    .topbar { min-height:58px; padding:8px 16px; padding-top:max(8px,var(--safe-top)); display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line); background:#1a1a1eeF; }
+    .top-left,.top-right,.tools { display:flex; align-items:center; gap:8px; min-width:0; }
+    .top-left { flex:1; }
+    .chapter-heading { min-width:0; }
+    .chapter-heading h1 { margin:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chip { background:#312e81; color:#c7d2fe; padding:3px 7px; border-radius:5px; font-size:11px; white-space:nowrap; }
+    .word-stats { text-align:right; white-space:nowrap; font-size:12px; }
+    .word-stats small { display:block; color:var(--muted); font-size:10px; }
+    .tools { padding:7px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+    .tools .btn { min-height:34px; padding:5px 9px; }
+    .workspace { flex:1; min-height:0; min-width:0; display:flex; justify-content:center; padding:20px; overflow:auto; overscroll-behavior:contain; }
+    .paper { width:100%; max-width:820px; min-height:100%; display:flex; flex-direction:column; padding:clamp(16px,4vw,48px); border:1px solid #3f3f4666; border-radius:13px; background:var(--bg); }
+    .paper-title { width:100%; background:transparent; color:white; font-size:clamp(21px,3vw,28px); font-weight:750; border:0; border-bottom:1px solid var(--line); padding:0 0 14px; margin-bottom:18px; }
+    .editor { flex:1; width:100%; min-height:45vh; resize:none; background:transparent; color:#e4e4e7; border:0; outline:none; font-family:"Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",Georgia,serif; font-size:17px; line-height:1.95; tab-size:4; overflow-wrap:anywhere; }
+    .editor::placeholder { color:#71717a; }
+    .statusbar { min-height:34px; padding:5px 16px; padding-bottom:max(5px,var(--safe-bottom)); display:flex; justify-content:space-between; align-items:center; gap:10px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; }
+    .statusbar .saved { color:#a5b4fc; }
+    .hidden { display:none!important; }
+    .mobile-only { display:none; }
+    .overlay { display:none; }
+    .empty { color:var(--muted); font-size:13px; padding:12px 0; }
+    .entry-actions { display:flex; justify-content:flex-end; }
+    .export-list { display:grid; gap:9px; }
+    .export-note { color:var(--muted); font-size:12px; margin-bottom:15px; }
+    .toast { position:fixed; z-index:100; left:50%; bottom:calc(24px + var(--safe-bottom)); transform:translateX(-50%); max-width:calc(100vw - 32px); padding:11px 16px; border:1px solid var(--line); border-radius:10px; background:#27272c; box-shadow:0 10px 35px #0007; }
+    .dialog-backdrop { position:fixed; z-index:90; inset:0; display:grid; place-items:center; padding:20px; background:#000b; }
+    .dialog { width:min(100%,440px); max-height:85dvh; overflow:auto; padding:22px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    .dialog h2 { margin:0 0 8px; font-size:18px; }
+    .dialog p { color:var(--muted); font-size:13px; }
+    .dialog-actions { display:flex; gap:8px; margin-top:18px; }
+    .dialog-actions .btn { flex:1; }
+    .focus-mode .sidebar,.focus-mode .statusbar { display:none; }
+    .focus-mode .workspace { padding:12px; }
+    .focus-mode .paper { max-width:900px; border-color:transparent; }
+    .focus-mode .topbar { min-height:52px; }
+    @media(max-width:760px) {
+      .mobile-only { display:inline-flex; }
+      .sidebar { position:fixed; inset:0 auto 0 0; width:min(86vw,320px); transform:translateX(-105%); transition:transform .22s ease; box-shadow:none; }
+      .sidebar.open { transform:translateX(0); box-shadow:15px 0 45px #0007; }
+      .overlay.show { display:block; position:fixed; z-index:20; inset:0; background:#0009; }
+      .topbar { padding-left:10px; padding-right:10px; gap:6px; }
+      .top-left,.top-right { gap:5px; }
+      .word-stats { display:none; }
+      .workspace { padding:9px; }
+      .paper { min-height:100%; padding:17px; border-radius:10px; }
+      .editor { min-height:50vh; font-size:16px; line-height:1.9; }
+      .tools { border:0; padding:0; background:transparent; }
+      .tools .btn { min-height:38px; padding:6px 10px; }
+      .statusbar { font-size:10px; padding-left:10px; padding-right:10px; }
+      .statusbar .profile { display:none; }
+    }
+    @media(max-width:380px) {
+      .brand { padding:12px; }
+      .topbar { flex-wrap:wrap; }
+      .top-left { flex:1 1 55%; }
+      .top-right { flex:0 0 auto; }
+      .chapter-heading h1 { max-width:145px; }
+      .paper-title { font-size:21px; }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; }
+    }
+    @media print {
+      body { background:white!important; color:black!important; }
+      .sidebar,.topbar,.statusbar,.overlay,.toast,.dialog-backdrop { display:none!important; }
+      .app,.main,.workspace,.paper { display:block!important; height:auto!important; min-height:0!important; overflow:visible!important; border:0!important; padding:0!important; background:white!important; }
+      .paper-title { color:black!important; font-size:22pt!important; border:0!important; }
+      .editor { display:block!important; height:auto!important; min-height:0!important; overflow:visible!important; color:black!important; white-space:pre-wrap!important; font:12pt/1.8 "Noto Serif JP","Yu Mincho",serif!important; }
+      @page { margin:20mm; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Studio navigation">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">S</div>
+      <div class="brand-copy">
+        <input id="novelTitle" aria-label="Novel title" maxlength="160" value="The Reincarnated Sage">
+        <div class="sub" id="novelSubtitle">Volume 1 · Act II</div>
+      </div>
+      <button class="btn ghost mobile-only" id="closeSidebar" aria-label="Close navigation">✕</button>
+    </div>
+    <nav class="tabs" aria-label="Workspace">
+      <button class="tab active" data-tab="manuscript">Manuscript</button>
+      <button class="tab" data-tab="wiki">World Wiki</button>
+      <button class="tab" data-tab="export">Export</button>
+    </nav>
+    <div class="side-content">
+      <section id="manuscriptPanel">
+        <div class="section-head">
+          <span class="eyebrow">Structure</span>
+          <button class="btn small ghost" id="addChapter">＋ Chapter</button>
+        </div>
+        <div class="sub" style="margin-bottom:9px">VOLUME 1 · AWAKENING</div>
+        <div class="chapter-list" id="chapterList"></div>
+        <p class="sub" id="totalWords" style="margin-top:14px">0 words total</p>
+      </section>
+
+      <section id="wikiPanel" class="hidden">
+        <div class="section-head">
+          <span class="eyebrow">Characters & Lore</span>
+          <button class="btn small ghost" id="addWiki">＋ Entry</button>
+        </div>
+        <div id="wikiList"></div>
+      </section>
+
+      <section id="exportPanel" class="hidden">
+        <div class="eyebrow">Publishing Suite</div>
+        <p class="export-note">Export a manuscript or save a backup. PDF uses your device's print-to-PDF workflow.</p>
+        <div class="export-list">
+          <button class="btn" id="exportEpub">Export EPUB (.epub)</button>
+          <button class="btn" id="exportDocx">Export Word (.docx)</button>
+          <button class="btn" id="exportPdf">Print / Save PDF</button>
+          <button class="btn" id="backupJson">Download JSON backup</button>
+          <button class="btn" id="importJson">Restore JSON backup</button>
+          <input class="hidden" id="fileInput" type="file" accept=".json,application/json">
+        </div>
+      </section>
+    </div>
+    <div class="side-footer">
+      <span><span class="status-dot"></span><span id="storageLabel">Local storage</span></span>
+      <button class="btn small ghost" id="focusSidebar">Focus</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-left">
+        <button class="btn ghost mobile-only" id="openSidebar" aria-label="Open navigation">☰</button>
+        <span class="chip" id="chapterNumber">Ch. 1</span>
+        <div class="chapter-heading">
+          <h1 id="currentHeading">The Summoning Circle</h1>
+        </div>
+      </div>
+
+      <div class="tools" role="toolbar" aria-label="Writing tools">
+        <button class="btn" id="insertQuotes" title="Wrap selection in dialogue quotes">“ ”</button>
+        <button class="btn" id="insertIndent" title="Insert paragraph indentation">¶</button>
+        <button class="btn" id="insertRuby" title="Insert furigana markup">Ruby</button>
+        <button class="btn" id="insertIllustration" title="Insert illustration marker">▧</button>
+      </div>
+
+      <div class="top-right">
+        <div class="word-stats">
+          <strong id="wordCount">0</strong> words
+          <small>Goal: 500 / day</small>
+        </div>
+        <button class="btn small" id="focusTop">Focus</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <section class="paper" id="paper" aria-label="Manuscript editor">
+        <input
+          id="chapterTitle"
+          class="paper-title"
+          maxlength="200"
+          placeholder="Chapter title"
+          aria-label="Chapter title"
+        >
+        <textarea
+          id="editor"
+          class="editor"
+          aria-label="Chapter manuscript"
+          placeholder="Begin writing your light novel here…"
+          spellcheck="true"
+          autocapitalize="sentences"
+        ></textarea>
+      </section>
+    </div>
+
+    <footer class="statusbar">
+      <span class="profile">UTF-8 · Light Novel Manuscript</span>
+      <span id="saveStatus" role="status" aria-live="polite">Ready</span>
+      <span id="chapterStats">0 characters</span>
+    </footer>
+  </main>
+</div>
+
+<div id="dialogHost"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<!-- For an offline mobile build, bundle JSZip locally instead of relying on this CDN. -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "shinobu_novel_data_v2";
+  const LEGACY_KEY = "shinobu_novel_data";
+  const $ = id => document.getElementById(id);
+
+  const defaultData = () => ({
+    schemaVersion: 2,
+    novelTitle: "The Reincarnated Sage",
+    novelSubtitle: "Volume 1 · Act II",
+    currentChapterId: "ch-1",
+    chapters: [
+      {
+        id: "ch-1",
+        title: "The Summoning Circle",
+        content: `The cold stone floor of the grand cathedral bit through Aria's royal robes. Around her, twelve high priests chanted in unison, their voices echoing off the vaulted ceilings adorned with stained glass.
+
+    "O ancient guardian of the stellar gates, hear our plea!" the High Priest bellowed, raising an ornate golden staff high into the air.
+
+    Furigana text demonstration: The {ruby:Great Sage|Daikenshi} manifested in a blinding flash of azure light.
+
+    [Illustration: Full page portrait of Aria activating her primary magic circle in the cathedral ruins.]
+
+    Aria clutched her pendant, feeling the latent mana surge through her veins for the very first time. There was no turning back now.`
+      },
+      {
+        id: "ch-2",
+        title: "Forest Encounter",
+        content: "Dense emerald canopy filtered the afternoon sun into fractured beams of light. Aria stepped carefully over gnarled roots, her breathing measured and calm.\n\nA low growl echoed from the shadows of the thicket."
+      },
+      {
+        id: "ch-3",
+        title: "First Magic",
+        content: "Sparks danced across her fingertips, crackling with raw ethereal energy. With a quiet whisper, she released the spell."
+      }
+    ],
+    wikiEntries: [
+      {
+        id: "w-1",
+        name: "Aria Von Sylph",
+        role: "Main Protagonist · Mage",
+        description: ""
+      },
+      {
+        id: "w-2",
+        name: "Kuro (Spirit Beast)",
+        role: "Companion · Shadow Wolf",
+        description: ""
+      }
+    ]
+  });
+
+  let data = defaultData();
+  let activeTab = "manuscript";
+  let focusMode = false;
+  let dirty = false;
+  let saveTimer = null;
+  let toastTimer = null;
+  let lastSavedAt = 0;
+
+  function makeId(prefix = "id") {
+    return prefix + "-" +
+      (crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  function safeString(value, fallback = "") {
+    return typeof value === "string" ? value : fallback;
+  }
+
+  function normalizeData(raw) {
+    if (!raw || typeof raw !== "object") {
+      throw new Error("Invalid backup format.");
+    }
+
+    const chapters = Array.isArray(raw.chapters) ? raw.chapters : [];
+    const wiki = Array.isArray(raw.wikiEntries) ? raw.wikiEntries : [];
+
+    const cleanChapters = chapters
+      .filter(c => c && typeof c === "object")
+      .map((c, i) => ({
+        id: safeString(c.id) || makeId("ch"),
+        title: safeString(c.title, "Chapter " + (i + 1)).slice(0, 200),
+        content: safeString(c.content)
+      }));
+
+    if (!cleanChapters.length) {
+      cleanChapters.push({
+        id: makeId("ch"),
+        title: "Chapter 1",
+        content: ""
+      });
+    }
+
+    const ids = new Set();
+    cleanChapters.forEach(c => {
+      if (ids.has(c.id)) c.id = makeId("ch");
+      ids.add(c.id);
+    });
+
+    const cleanWiki = wiki
+      .filter(w => w && typeof w === "object")
+      .map(w => ({
+        id: safeString(w.id) || makeId("wiki"),
+        name: safeString(w.name, "New Entry").slice(0, 160),
+        role: safeString(w.role).slice(0, 200),
+        description: safeString(w.description).slice(0, 10000)
+      }));
+
+    const selected = safeString(raw.currentChapterId);
+
+    return {
+      schemaVersion: 2,
+      novelTitle: safeString(raw.novelTitle, "Untitled Novel").slice(0, 160) || "Untitled Novel",
+      novelSubtitle: safeString(raw.novelSubtitle, "Volume 1").slice(0, 160),
+      currentChapterId: cleanChapters.some(c => c.id === selected)
+        ? selected
+        : cleanChapters[0].id,
+      chapters: cleanChapters,
+      wikiEntries: cleanWiki
+    };
+  }
+  function loadData() {
+    try {
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) raw = localStorage.getItem(LEGACY_KEY);
+
+      if (raw) {
+        data = normalizeData(JSON.parse(raw));
+        $("storageLabel").textContent = "Saved locally";
+      } else {
+        data = defaultData();
+      }
+    } catch (err) {
+      data = defaultData();
+      $("storageLabel").textContent = "Storage unavailable";
+      console.error("Could not load saved manuscript:", err);
+      showToast("Saved data could not be loaded. A fresh manuscript is open; import a backup if needed.");
+    }
+  }
+
+  function currentChapter() {
+    return data.chapters.find(c => c.id === data.currentChapterId) || data.chapters[0];
+  }
+
+  function wordCount(text) {
+    const value = (text || "").trim();
+    if (!value) return 0;
+    return (value.match(/\S+/gu) || []).length;
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[c]);
+  }
+
+  function escapeXml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&apos;"
+    })[c]);
+  }
+
+  function safeFilename(name) {
+    return (name || "Shinobu_Manuscript")
+      .normalize("NFKC")
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")
+      .replace(/\s+/g, "_")
+      .slice(0, 100) || "Shinobu_Manuscript";
+  }
+
+  function showToast(message, duration = 3000) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.add("hidden"), duration);
+  }
+
+  function setSaveStatus(message, saved = false) {
+    $("saveStatus").textContent = message;
+    $("saveStatus").classList.toggle("saved", saved);
+  }
+
+  function persistNow() {
+    clearTimeout(saveTimer);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      dirty = false;
+      lastSavedAt = Date.now();
+      setSaveStatus("All changes saved", true);
+      $("storageLabel").textContent = "Saved locally";
+      return true;
+    } catch (err) {
+      console.error("Unable to save manuscript:", err);
+      setSaveStatus("Save failed — download a backup", false);
+      $("storageLabel").textContent = "Storage full/unavailable";
+      showToast("Local saving failed. Download a JSON backup before closing.");
+      return false;
+    }
+  }
+
+  function scheduleSave() {
+    dirty = true;
+    setSaveStatus("Unsaved changes…");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistNow, 350);
+  }
+
+  function renderAll() {
+    $("novelTitle").value = data.novelTitle;
+    $("novelSubtitle").textContent = data.novelSubtitle || "Light Novel Manuscript";
+    renderChapters();
+    renderWiki();
+    renderEditor();
+  }
+
+  function renderChapters() {
+    const list = $("chapterList");
+    list.replaceChildren();
+
+    data.chapters.forEach((chapter, index) => {
+      const row = document.createElement("div");
+      row.className = "chapter-row";
+
+      const select = document.createElement("button");
+      select.className = "chapter-select" +
+        (chapter.id === data.currentChapterId ? " active" : "");
+      select.textContent = "Ch. " + (index + 1) + ": " +
+        (chapter.title || "Untitled");
+      select.setAttribute(
+        "aria-current",
+        chapter.id === data.currentChapterId ? "page" : "false"
+      );
+      select.addEventListener("click", () => selectChapter(chapter.id));
+
+      const del = document.createElement("button");
+      del.className = "delete-btn";
+      del.textContent = "×";
+      del.title = "Delete " + (chapter.title || "chapter");
+      del.setAttribute("aria-label", del.title);
+      del.addEventListener("click", () => deleteChapter(chapter.id));
+
+      row.append(select, del);
+      list.append(row);
+    });
+
+    $("totalWords").textContent =
+      data.chapters.reduce((sum, c) => sum + wordCount(c.content), 0)
+        .toLocaleString() + " words total";
+  }
+
+  function renderWiki() {
+    const list = $("wikiList");
+    list.replaceChildren();
+
+    if (!data.wikiEntries.length) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No entries yet. Add a character, place, or lore note.";
+      list.append(empty);
+      return;
+    }
+
+    data.wikiEntries.forEach(entry => {
+      const card = document.createElement("div");
+      card.className = "wiki-card";
+
+      const name = document.createElement("input");
+      name.value = entry.name;
+      name.maxLength = 160;
+      name.setAttribute("aria-label", "Entry name");
+      name.addEventListener("input", () => {
+        entry.name = name.value;
+        scheduleSave();
+      });
+
+      const role = document.createElement("input");
+      role.value = entry.role;
+      role.maxLength = 200;
+      role.className = "wiki-role";
+      role.setAttribute("aria-label", "Entry role");
+      role.addEventListener("input", () => {
+        entry.role = role.value;
+        scheduleSave();
+      });
+
+      const description = document.createElement("textarea");
+      description.value = entry.description || "";
+      description.placeholder = "Notes, history, abilities…";
+      description.rows = 2;
+      description.style.cssText =
+        "width:100%;resize:vertical;background:transparent;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px;margin-top:8px;";
+      description.setAttribute("aria-label", "Entry notes");
+      description.addEventListener("input", () => {
+        entry.description = description.value;
+        scheduleSave();
+      });
+
+      const actions = document.createElement("div");
+      actions.className = "entry-actions";
+
+      const del = document.createElement("button");
+      del.className = "btn small danger";
+      del.textContent = "Delete entry";
+      del.addEventListener("click", () => {
+        if (!confirm("Delete this wiki entry?")) return;
+        data.wikiEntries = data.wikiEntries.filter(w => w.id !== entry.id);
+        renderWiki();
+        scheduleSave();
+      });
+
+      actions.append(del);
+      card.append(name, role, description, actions);
+      list.append(card);
+    });
+  }
+
+  function renderEditor() {
+    const chapter = currentChapter();
+    if (!chapter) return;
+
+    $("chapterTitle").value = chapter.title;
+    $("editor").value = chapter.content;
+
+    const index = data.chapters.findIndex(c => c.id === chapter.id);
+    $("chapterNumber").textContent = "Ch. " + (index + 1);
+    $("currentHeading").textContent = chapter.title || "Untitled chapter";
+    updateStats();
+  }
+
+  function updateStats() {
+    const content = $("editor").value;
+    $("wordCount").textContent = wordCount(content).toLocaleString();
+    $("chapterStats").textContent = content.length.toLocaleString() + " characters";
+
+    $("totalWords").textContent =
+      data.chapters.reduce((sum, c) => sum + wordCount(c.content), 0)
+        .toLocaleString() + " words total";
+  }
+
+  function selectChapter(id) {
+    if (!data.chapters.some(c => c.id === id)) return;
+
+    syncEditorToData();
+    data.currentChapterId = id;
+    renderChapters();
+    renderEditor();
+    scheduleSave();
+    closeSidebar();
+    $("workspace")?.scrollTo?.(0, 0);
+  }
+
+  function syncEditorToData() {
+    const chapter = currentChapter();
+    if (!chapter) return;
+
+    chapter.title = $("chapterTitle").value;
+    chapter.content = $("editor").value;
+  }
+
+  function addChapter() {
+    syncEditorToData();
+
+    const chapter = {
+      id: makeId("ch"),
+      title: "Chapter " + (data.chapters.length + 1),
+      content: ""
+    };
+
+    data.chapters.push(chapter);
+    data.currentChapterId = chapter.id;
+    renderAll();
+    scheduleSave();
+    closeSidebar();
+
+    requestAnimationFrame(() => $("chapterTitle").focus());
+  }
+
+  function deleteChapter(id) {
+    if (data.chapters.length <= 1) {
+      showToast("Keep at least one chapter in your manuscript.");
+      return;
+    }
+
+    const chapter = data.chapters.find(c => c.id === id);
+
+    if (!confirm('Delete "' + (chapter?.title || "this chapter") + '"? This cannot be undone.')) {
+      return;
+    }
+
+    data.chapters = data.chapters.filter(c => c.id !== id);
+
+    if (data.currentChapterId === id) {
+      data.currentChapterId = data.chapters[0].id;
+    }
+
+    renderAll();
+    scheduleSave();
+  }
+
+  function addWikiEntry() {
+    data.wikiEntries.push({
+      id: makeId("wiki"),
+      name: "New Character",
+      role: "Role / Description",
+      description: ""
+    });
+
+    renderWiki();
+    scheduleSave();
+
+    const inputs = $("wikiList").querySelectorAll("input");
+    inputs[inputs.length - 2]?.focus();
+  }
+
+  function setTab(tab) {
+    activeTab = tab;
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      const selected = btn.dataset.tab === tab;
+      btn.classList.toggle("active", selected);
+      btn.setAttribute("aria-selected", String(selected));
+    });
+
+    $("manuscriptPanel").classList.toggle("hidden", tab !== "manuscript");
+    $("wikiPanel").classList.toggle("hidden", tab !== "wiki");
+    $("exportPanel").classList.toggle("hidden", tab !== "export");
+
+    if (window.matchMedia("(max-width:760px)").matches) {
+      closeSidebar();
+    }
+  }
+
+  function openSidebar() {
+    $("sidebar").classList.add("open");
+    $("overlay").classList.add("show");
+    $("openSidebar").setAttribute("aria-expanded", "true");
+  }
+
+  function closeSidebar() {
+    $("sidebar").classList.remove("open");
+    $("overlay").classList.remove("show");
+    $("openSidebar").setAttribute("aria-expanded", "false");
+  }
+
+  function toggleFocus() {
+    focusMode = !focusMode;
+    document.body.classList.toggle("focus-mode", focusMode);
+    $("focusTop").textContent = focusMode ? "Exit focus" : "Focus";
+    $("focusSidebar").textContent = focusMode ? "Exit focus" : "Focus";
+  }
+
+  function insertAtSelection(prefix, suffix, fallback) {
+    const editor = $("editor");
+    const start = editor.selectionStart ?? editor.value.length;
+    const end = editor.selectionEnd ?? start;
+    const selected = editor.value.slice(start, end) || fallback;
+    const replacement = prefix + selected + suffix;
+
+    editor.setRangeText(replacement, start, end, "end");
+    editor.focus();
+
+    const chapter = currentChapter();
+    chapter.content = editor.value;
+    updateStats();
+    scheduleSave();
+  }
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+
+    document.body.append(a);
+    a.click();
+    a.remove();
+
+    // Allow mobile browsers time to start the download.
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
+  function backupJson() {
+    syncEditorToData();
+
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      {type: "application/json;charset=utf-8"}
+    );
+
+    downloadBlob(blob, safeFilename(data.novelTitle) + "_backup.json");
+    showToast("JSON backup prepared.");
+  }
+
+  async function importJsonFile(file) {
+    if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      showToast("Backup is too large (maximum 25 MB).");
+      return;
+    }
+
+    try {
+      const imported = normalizeData(JSON.parse(await file.text()));
+
+      if (!confirm("Restore this backup? The current manuscript will be replaced. Download a backup first if you need it.")) {
+        return;
+      }
+
+      data = imported;
+      renderAll();
+
+      if (!persistNow()) {
+        showToast("Backup loaded into memory, but saving failed. Download a new backup.");
+      } else {
+        showToast("Backup restored.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Could not restore that file. Choose a valid Shinobu JSON backup.");
+    } finally {
+      $("fileInput").value = "";
+    }
+  }
+
+  function chapterHtml(chapter, index) {
+    const paragraphs = (chapter.content || "").split(/\n\s*\n/);
+
+    return `<h1>${escapeXml(chapter.title || "Chapter " + (index + 1))}</h1>\n` +
+      paragraphs
+        .map(p => `<p>${escapeXml(p).replace(/\n/g, "<br/>")}</p>`)
+        .join("\n");
+  }
+
+  function requireZip() {
+    if (!window.JSZip) {
+      showToast("ZIP library unavailable. Connect to the internet or bundle JSZip locally for offline use.");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function exportEpub() {
+    if (!requireZip()) return;
+
+    syncEditorToData();
+    persistNow();
+
+    const zip = new JSZip();
+    const title = data.novelTitle || "Untitled Novel";
+    const chapters = data.chapters;
+    const modified = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+
+    const uid = "urn:uuid:" +
+      (crypto.randomUUID ? crypto.randomUUID() : makeId("book"));
+
+    // EPUB requires this file to be first and uncompressed.
+    zip.file("mimetype", "application/epub+zip", {
+      compression: "STORE"
+    });
+
+    zip.file(
+      "META-INF/container.xml",
+      '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">' +
+      '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>' +
+      '</rootfiles></container>'
+    );
+
+    const manifest = [];
+    const spine = [];
+    const navLinks = [];
+
+    chapters.forEach((ch, i) => {
+      const id = "chapter" + (i + 1);
+      const filename = id + ".xhtml";
+
+      manifest.push(
+        `<item id="${id}" href="${filename}" media-type="application/xhtml+xml"/>`
+      );
+
+      spine.push(`<itemref idref="${id}"/>`);
+
+      navLinks.push(
+        `<li><a href="${filename}">${escapeXml(ch.title || "Chapter " + (i + 1))}</a></li>`
+      );
+
+      zip.file(
+        "OEBPS/" + filename,
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en">' +
+        '<head><title>' + escapeXml(ch.title || "Chapter " + (i + 1)) +
+        '</title><link rel="stylesheet" type="text/css" href="style.css"/></head>' +
+        '<body>' + chapterHtml(ch, i) + '</body></html>'
+      );
+    });
+
+    zip.file(
+      "OEBPS/nav.xhtml",
+      '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en">' +
+      '<head><title>Contents</title></head><body>' +
+      '<nav epub:type="toc" id="toc"><h1>Contents</h1><ol>' +
+      navLinks.join("") +
+      '</ol></nav></body></html>'
+    );
+
+    zip.file(
+      "OEBPS/style.css",
+      "body{font-family:serif;line-height:1.8;margin:5%;}" +
+      "h1{font-size:1.5em;margin:0 0 1.5em;}" +
+      "p{white-space:pre-wrap;text-indent:1em;margin:0 0 1em;}"
+    );
+
+    zip.file(
+      "OEBPS/content.opf",
+      '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid" xml:lang="en">' +
+      '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">' +
+      '<dc:identifier id="bookid">' + escapeXml(uid) + '</dc:identifier>' +
+      '<dc:title>' + escapeXml(title) + '</dc:title>' +
+      '<dc:language>en</dc:language>' +
+      '<meta property="dcterms:modified">' + modified + '</meta>' +
+      '</metadata><manifest>' +
+      '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>' +
+      '<item id="css" href="style.css" media-type="text/css"/>' +
+      manifest.join("") +
+      '</manifest><spine>' + spine.join("") +
+      '</spine></package>'
+    );
+
+    try {
+      const blob = await zip.generateAsync({
+        type: "blob",
+        mimeType: "application/epub+zip",
+        compression: "DEFLATE"
+      });
+
+      downloadBlob(blob, safeFilename(title) + ".epub");
+      showToast("EPUB generated.");
+    } catch (err) {
+      console.error(err);
+      showToast("EPUB export failed. Please try again.");
+    }
+  }
+
+  // Create a minimal Office Open XML .docx package.
+  async function exportDocx() {
+    if (!requireZip()) return;
+
+    syncEditorToData();
+    persistNow();
+
+    const zip = new JSZip();
+    const paragraphs = [];
+
+    const addParagraph = (text, style) => {
+      const pPr = style
+        ? `<w:pPr><w:pStyle w:val="${style}"/></w:pPr>`
+        : "";
+
+      const lines = String(text).split("\n");
+
+      const runs = lines.map((line, i) =>
+        (i ? '<w:r><w:br/></w:r>' : "") +
+        '<w:r><w:t xml:space="preserve">' +
+        escapeXml(line) +
+        '</w:t></w:r>'
+      ).join("");
+
+      paragraphs.push(`<w:p>${pPr}${runs}</w:p>`);
+    };
+
+    addParagraph(data.novelTitle, "Title");
+
+    data.chapters.forEach((ch, i) => {
+      if (i) addParagraph("");
+
+      addParagraph(ch.title || "Chapter " + (i + 1), "Heading1");
+
+      (ch.content || "")
+        .split(/\n\s*\n/)
+        .forEach(p => addParagraph(p));
+    });
+
+    zip.file(
+      "[Content_Types].xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+      '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+      '</Types>'
+    );
+
+    zip.file(
+      "_rels/.rels",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+      '</Relationships>'
+    );
+
+    zip.file(
+      "word/document.xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:body>' + paragraphs.join("") +
+      '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>' +
+      '<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>' +
+      '</w:sectPr></w:body></w:document>'
+    );
+
+    zip.file(
+      "word/styles.xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:style w:type="paragraph" w:default="1" w:styleId="Normal">' +
+      '<w:name w:val="Normal"/><w:rPr><w:sz w:val="24"/></w:rPr></w:style>' +
+      '<w:style w:type="paragraph" w:styleId="Title">' +
+      '<w:name w:val="Title"/><w:basedOn w:val="Normal"/>' +
+      '<w:pPr><w:jc w:val="center"/></w:pPr>' +
+      '<w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style>' +
+      '<w:style w:type="paragraph" w:styleId="Heading1">' +
+      '<w:name w:val="heading 1"/><w:basedOn w:val="Normal"/>' +
+      '<w:next w:val="Normal"/><w:pPr><w:keepNext/>' +
+      '<w:spacing w:before="360" w:after="240"/></w:pPr>' +
+      '<w:rPr><w:b/><w:sz w:val="30"/></w:rPr></w:style>' +
+      '</w:styles>'
+    );
+    try {
+      const blob = await zip.generateAsync({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      });
+
+      downloadBlob(blob, safeFilename(data.novelTitle) + ".docx");
+      showToast("Word document generated.");
+    } catch (err) {
+      console.error(err);
+      showToast("DOCX export failed. Please try again.");
+    }
+  }
+
+  function printPdf() {
+    syncEditorToData();
+    persistNow();
+
+    // The user selects "Save as PDF" in the system print dialog.
+    window.print();
+  }
+
+  $("novelTitle").addEventListener("input", () => {
+    data.novelTitle = $("novelTitle").value;
+    scheduleSave();
+  });
+
+  $("chapterTitle").addEventListener("input", () => {
+    const chapter = currentChapter();
+    if (!chapter) return;
+
+    chapter.title = $("chapterTitle").value;
+    $("currentHeading").textContent = chapter.title || "Untitled chapter";
+
+    renderChapters();
+    scheduleSave();
+  });
+
+  $("editor").addEventListener("input", () => {
+    const chapter = currentChapter();
+    if (!chapter) return;
+
+    chapter.content = $("editor").value;
+    updateStats();
+    scheduleSave();
+  });
+
+  // Save pending changes when the app goes into the background.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && dirty) {
+      syncEditorToData();
+      persistNow();
+    }
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (dirty) {
+      syncEditorToData();
+      persistNow();
+    }
+  });
+
+  $("addChapter").addEventListener("click", addChapter);
+  $("addWiki").addEventListener("click", addWikiEntry);
+
+  $("openSidebar").addEventListener("click", openSidebar);
+  $("closeSidebar").addEventListener("click", closeSidebar);
+  $("overlay").addEventListener("click", closeSidebar);
+
+  $("focusTop").addEventListener("click", toggleFocus);
+  $("focusSidebar").addEventListener("click", toggleFocus);
+
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => setTab(btn.dataset.tab));
+  });
+
+  $("insertQuotes").addEventListener("click", () =>
+    insertAtSelection("“", "”", "dialogue")
+  );
+
+  $("insertIndent").addEventListener("click", () =>
+    insertAtSelection("\n\n    ", "", "paragraph")
+  );
+
+  $("insertRuby").addEventListener("click", () =>
+    insertAtSelection("{ruby:", "}", "Reading|Kanji")
+  );
+
+  $("insertIllustration").addEventListener("click", () =>
+    insertAtSelection("[Illustration: ", "]", "Describe the illustration")
+  );
+
+  $("exportEpub").addEventListener("click", exportEpub);
+  $("exportDocx").addEventListener("click", exportDocx);
+  $("exportPdf").addEventListener("click", printPdf);
+
+  $("backupJson").addEventListener("click", backupJson);
+
+  $("importJson").addEventListener("click", () =>
+    $("fileInput").click()
+  );
+
+  $("fileInput").addEventListener("change", e =>
+    importJsonFile(e.target.files?.[0])
+  );
+
+  window.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      syncEditorToData();
+
+      if (persistNow()) {
+        showToast("Manuscript saved.");
+      }
+    }
+
+    if (e.key === "Escape") {
+      closeSidebar();
+    }
+  });
+
+  loadData();
+  renderAll();
+  setTab("manuscript");
+
+  if (dirty) scheduleSave();
+})();
+</script>
+</body>
+</html>
