@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "Shinobu Light Novel Studio",
+  "short_name": "Shinobu",
+  "description": "A mobile-first light novel writing studio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121214",
+  "theme_color": "#121214"
+}
